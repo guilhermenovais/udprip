@@ -3,6 +3,7 @@ package com.guilherme.udprip.app;
 import com.guilherme.udprip.model.RoutingEntry;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -21,22 +22,7 @@ public class DistanceVector {
   public DistanceVector(String localAddress, int updatePeriod) {
     this.localAddress = localAddress;
     this.updatePeriod = updatePeriod;
-  }
-
-  /**
-   * Get the next hop for a destination.
-   *
-   * @param destination The destination IP address
-   * @return The next hop IP address or null if no route exists
-   */
-  public synchronized String getNextHop(String destination) {
-    // If destination is self, return self
-    if (destination.equals(localAddress)) {
-      return localAddress;
-    }
-
-    RoutingEntry entry = routingTable.get(destination);
-    return entry != null ? entry.getNextHop() : null;
+    routingTable.put(localAddress, new RoutingEntry(localAddress, 0, localAddress, localAddress));
   }
 
   /**
@@ -63,11 +49,6 @@ public class DistanceVector {
       String destination = entry.getKey();
       int distanceThroughNeighbor = linkWeight + entry.getValue();
 
-      // Skip if the destination is the local router
-      if (destination.equals(localAddress)) {
-        continue;
-      }
-
       // Bellman-Ford: Update if we found a better route or this is from the same neighbor we
       // learned from
       RoutingEntry currentEntry = routingTable.get(destination);
@@ -81,7 +62,8 @@ public class DistanceVector {
             destination,
             neighborIp,
             distanceThroughNeighbor);
-      } else if (currentEntry.getLearnedFrom().equals(neighborIp)) {
+      } else if (currentEntry.getLearnedFrom().equals(neighborIp)
+          && distanceThroughNeighbor != currentEntry.getDistance()) {
         // Update from the same neighbor we learned this route from
         currentEntry.setDistance(distanceThroughNeighbor);
         currentEntry.updateTimestamp();
@@ -114,12 +96,6 @@ public class DistanceVector {
    */
   public synchronized Map<String, Integer> getDistancesForNeighbor(String neighborIp) {
     Map<String, Integer> distances = new HashMap<>();
-
-    // Always include the local router with distance based on link weight
-    RoutingEntry neighborEntry = routingTable.get(neighborIp);
-    if (neighborEntry != null) {
-      distances.put(localAddress, neighborEntry.getDistance());
-    }
 
     // Add all other destinations, applying split horizon
     for (RoutingEntry entry : routingTable.values()) {
@@ -163,7 +139,10 @@ public class DistanceVector {
     // Find stale entries
     Map<String, RoutingEntry> staleEntries =
         routingTable.entrySet().stream()
-            .filter(entry -> now - entry.getValue().getLastUpdated() > timeout)
+            .filter(
+                entry ->
+                    now - entry.getValue().getLastUpdated() > timeout
+                        && !Objects.equals(entry.getKey(), localAddress))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     // Remove stale entries and their dependent routes
@@ -272,5 +251,21 @@ public class DistanceVector {
    */
   public Set<String> getAllNeighbors() {
     return neighbors.keySet();
+  }
+
+  /**
+   * Get the next hop for a destination.
+   *
+   * @param destination The destination IP address
+   * @return The next hop IP address or null if no route exists
+   */
+  public synchronized String getNextHop(String destination) {
+    // If destination is self, return self
+    if (destination.equals(localAddress)) {
+      return localAddress;
+    }
+
+    RoutingEntry entry = routingTable.get(destination);
+    return entry != null ? entry.getNextHop() : null;
   }
 }
