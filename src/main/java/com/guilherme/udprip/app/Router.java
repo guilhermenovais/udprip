@@ -18,7 +18,6 @@ public class Router {
 
   private final String localAddress;
   private final DistanceVector distanceVector;
-  private final TopologyManager topologyManager;
   private final UdpClient udpClient;
 
   public Router(String localAddress, int updatePeriod, UdpClient udpClient) {
@@ -27,7 +26,6 @@ public class Router {
 
     // Create internal components
     this.distanceVector = new DistanceVector(localAddress, updatePeriod);
-    this.topologyManager = new TopologyManager();
   }
 
   /**
@@ -92,7 +90,7 @@ public class Router {
     }
 
     String neighborIp = message.getSource();
-    Integer linkWeight = topologyManager.getLinkWeight(neighborIp);
+    Integer linkWeight = distanceVector.getLinkWeight(neighborIp);
 
     // Only process updates from known neighbors
     if (linkWeight != null) {
@@ -166,7 +164,7 @@ public class Router {
     distanceVector.invalidateStaleRoutes();
 
     // Send updates to each neighbor
-    for (String neighborIp : topologyManager.getAllNeighbors()) {
+    for (String neighborIp : distanceVector.getAllNeighbors()) {
       sendUpdateToNeighbor(neighborIp);
     }
   }
@@ -197,8 +195,7 @@ public class Router {
    * @param weight The link weight
    */
   public void addNeighbor(String neighborIp, int weight) {
-    if (topologyManager.addNeighbor(neighborIp, weight)) {
-      distanceVector.addDirectRoute(neighborIp, weight);
+    if (distanceVector.addNeighbor(neighborIp, weight)) {
       // Send an immediate update to the new neighbor
       sendUpdateToNeighbor(neighborIp);
     }
@@ -210,9 +207,7 @@ public class Router {
    * @param neighborIp The neighbor's IP address
    */
   public void removeNeighbor(String neighborIp) {
-    if (topologyManager.removeNeighbor(neighborIp)) {
-      distanceVector.removeDirectRoute(neighborIp);
-    }
+    distanceVector.removeNeighbor(neighborIp);
   }
 
   /**
