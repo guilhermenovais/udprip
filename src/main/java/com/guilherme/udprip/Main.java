@@ -1,8 +1,6 @@
 package com.guilherme.udprip;
 
 import com.guilherme.udprip.app.Router;
-import com.guilherme.udprip.app.TopologyManager;
-import com.guilherme.udprip.app.DistanceVector;
 import com.guilherme.udprip.infra.CliHandler;
 import com.guilherme.udprip.infra.UdpClient;
 import com.guilherme.udprip.infra.UdpServer;
@@ -34,10 +32,8 @@ public class Main {
 
             // Create instances
             InetAddress localAddress = InetAddress.getByName(address);
-            DistanceVector distanceVector = new DistanceVector(localAddress.getHostAddress(), period);
-            TopologyManager topologyManager = new TopologyManager();
             UdpClient udpClient = new UdpClient(UDP_PORT);
-            Router router = new Router(localAddress.getHostAddress(), distanceVector, topologyManager, udpClient);
+            Router router = new Router(localAddress.getHostAddress(), period, udpClient);
             UdpServer udpServer = new UdpServer(localAddress, UDP_PORT, router);
             CliHandler cliHandler = new CliHandler(router);
 
