@@ -49,7 +49,7 @@ public class UdpServer implements Runnable {
                     String message = new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8);
 
                     // Log source IP and message size
-                    logger.debug("Received {} bytes from {}", packet.getLength(), packet.getAddress().getHostAddress());
+                    logger.debug("Received {} bytes from {}: {}", packet.getLength(), packet.getAddress().getHostAddress(), message);
 
                     // Forward to router
                     router.handleMessage(message);
