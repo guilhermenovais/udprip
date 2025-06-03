@@ -35,7 +35,7 @@ public class UdpClient {
 
       // Send packet
       socket.send(packet);
-      logger.debug("Sent {} bytes to {}", data.length, destinationIp);
+      logger.debug("Sent {} bytes to {}: {}", data.length, destinationIp, message);
     } catch (IOException e) {
       logger.error("Error sending message to {}: {}", destinationIp, e.getMessage(), e);
     }
