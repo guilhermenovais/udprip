@@ -4,7 +4,6 @@ import com.guilherme.udprip.model.RoutingEntry;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 public class DistanceVector {
   private static final Logger logger = LoggerFactory.getLogger(DistanceVector.class);
 
-  private final Map<String, Integer> neighbors = new ConcurrentHashMap<>();
   private final String localAddress;
   private final int updatePeriod;
   private final Map<String, RoutingEntry> routingTable = new ConcurrentHashMap<>();
@@ -183,75 +181,6 @@ public class DistanceVector {
     return destination.equals(localAddress) || routingTable.containsKey(destination);
   }
 
-  /**
-   * Add a neighbor with the specified link weight.
-   *
-   * @param neighborIp The neighbor's IP address
-   * @param weight The link weight
-   * @return true if the neighbor was added or updated, false otherwise
-   */
-  public synchronized boolean addNeighbor(String neighborIp, int weight) {
-    Integer oldWeight = neighbors.put(neighborIp, weight);
-    boolean updated = false;
-
-    if (oldWeight == null) {
-      logger.info("Added neighbor {} with weight {}", neighborIp, weight);
-      updated = true;
-    } else if (oldWeight != weight) {
-      logger.info("Updated neighbor {} weight from {} to {}", neighborIp, oldWeight, weight);
-      updated = true;
-    }
-
-    if (updated) {
-      // Update routing table with direct route to this neighbor
-      addDirectRoute(neighborIp, weight);
-    }
-
-    return updated;
-  }
-
-  /**
-   * Remove a neighbor.
-   *
-   * @param neighborIp The neighbor's IP address
-   */
-  public synchronized void removeNeighbor(String neighborIp) {
-    Integer weight = neighbors.remove(neighborIp);
-    if (weight != null) {
-      logger.info("Removed neighbor {}", neighborIp);
-      // Remove route to this neighbor and all routes learned from it
-      removeDirectRoute(neighborIp);
-    }
-  }
-
-  /**
-   * Get the weight of the link to a neighbor.
-   *
-   * @param neighborIp The neighbor's IP address
-   * @return The link weight, or null if the neighbor doesn't exist
-   */
-  public Integer getLinkWeight(String neighborIp) {
-    return neighbors.get(neighborIp);
-  }
-
-  /**
-   * Check if a router is a neighbor.
-   *
-   * @param ip The IP address to check
-   * @return true if the IP is a neighbor, false otherwise
-   */
-  public boolean isNeighbor(String ip) {
-    return neighbors.containsKey(ip);
-  }
-
-  /**
-   * Get all neighbors.
-   *
-   * @return A set of all neighbor IP addresses
-   */
-  public Set<String> getAllNeighbors() {
-    return neighbors.keySet();
-  }
 
   /**
    * Get the next hop for a destination.
