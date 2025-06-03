@@ -22,7 +22,6 @@ public class CliHandler {
           "UDPRIP router started. Available commands: add <ip> <weight>, del <ip>, trace <ip>, quit");
 
       while (true) {
-        System.out.print("> ");
         if (!scanner.hasNextLine()) {
           break;
         }
