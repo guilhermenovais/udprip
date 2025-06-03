@@ -7,6 +7,7 @@ import com.guilherme.udprip.model.DataMessage;
 import com.guilherme.udprip.model.Message;
 import com.guilherme.udprip.model.TraceMessage;
 import com.guilherme.udprip.model.UpdateMessage;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +29,8 @@ public class Router {
     this.udpClient = udpClient;
 
     // Create internal components
-    this.distanceVector = new DistanceVector(localAddress, updatePeriod);
-    this.topologyManager = new TopologyManager();
+    this.distanceVector = new DistanceVector(localAddress);
+    this.topologyManager = new TopologyManager(updatePeriod);
   }
 
   /**
@@ -98,6 +99,9 @@ public class Router {
 
     // Only process updates from known neighbors
     if (linkWeight != null) {
+      // Record that we received an update from this neighbor
+      topologyManager.recordNeighborUpdate(neighborIp);
+      // Apply the update to our distance vector
       distanceVector.applyUpdate(neighborIp, message.getDistances(), linkWeight);
     } else {
       logger.debug("Ignoring update from unknown neighbor: {}", neighborIp);
@@ -165,7 +169,8 @@ public class Router {
   /** Send periodic updates to all neighbors. */
   public void sendPeriodicUpdates() {
     // Check for stale routes before sending updates
-    distanceVector.invalidateStaleRoutes();
+    List<String> staleNeighbors = topologyManager.findStaleNeighbors();
+    distanceVector.removeRoutesForStaleNeighbors(staleNeighbors);
 
     // Send updates to each neighbor
     for (String neighborIp : topologyManager.getAllNeighbors()) {

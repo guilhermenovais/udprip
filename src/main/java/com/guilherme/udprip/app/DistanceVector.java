@@ -2,10 +2,9 @@ package com.guilherme.udprip.app;
 
 import com.guilherme.udprip.model.RoutingEntry;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,12 +13,10 @@ public class DistanceVector {
   private static final Logger logger = LoggerFactory.getLogger(DistanceVector.class);
 
   private final String localAddress;
-  private final int updatePeriod;
   private final Map<String, RoutingEntry> routingTable = new ConcurrentHashMap<>();
 
-  public DistanceVector(String localAddress, int updatePeriod) {
+  public DistanceVector(String localAddress) {
     this.localAddress = localAddress;
-    this.updatePeriod = updatePeriod;
     routingTable.put(localAddress, new RoutingEntry(localAddress, 0, localAddress, localAddress));
   }
 
@@ -32,11 +29,9 @@ public class DistanceVector {
    */
   public synchronized void applyUpdate(
       String neighborIp, Map<String, Integer> neighborDistances, int linkWeight) {
-    // Update timestamp for the neighbor itself
+    // Make sure we have a routing entry for this neighbor
     RoutingEntry neighborEntry = routingTable.get(neighborIp);
-    if (neighborEntry != null) {
-      neighborEntry.updateTimestamp();
-    } else {
+    if (neighborEntry == null) {
       // Add the neighbor to the routing table if not already present
       routingTable.put(
           neighborIp, new RoutingEntry(neighborIp, linkWeight, neighborIp, neighborIp));
@@ -124,25 +119,15 @@ public class DistanceVector {
     routingTable.entrySet().removeIf(entry -> entry.getValue().getNextHop().equals(neighborIp));
   }
 
-  /** Invalidates routes that haven't been updated within the timeout period. */
-  public synchronized void invalidateStaleRoutes() {
-    long timeout = updatePeriod * 4 * 1000L; // Convert to milliseconds (4 * update period)
-    long now = System.currentTimeMillis();
-
-    // Find stale entries
-    Map<String, RoutingEntry> staleEntries =
-        routingTable.entrySet().stream()
-            .filter(
-                entry ->
-                    now - entry.getValue().getLastUpdated() > timeout
-                        && !Objects.equals(entry.getKey(), localAddress))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-    // Remove stale entries and their dependent routes
-    for (String staleIp : staleEntries.keySet()) {
-      logger.info("Removing stale route to {}", staleIp);
-      routingTable.remove(staleIp);
-      removeRoutesVia(staleIp);
+  /**
+   * Removes routes for stale neighbors.
+   *
+   * @param staleNeighbors List of neighbors considered stale
+   */
+  public synchronized void removeRoutesForStaleNeighbors(List<String> staleNeighbors) {
+    for (String neighborIp : staleNeighbors) {
+      // Remove all routes that use this neighbor as next hop
+      removeRoutesVia(neighborIp);
     }
   }
 

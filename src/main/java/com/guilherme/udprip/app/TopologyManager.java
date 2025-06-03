@@ -1,5 +1,7 @@
 package com.guilherme.udprip.app;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +14,19 @@ public class TopologyManager {
 
   // Maps neighbor IP to link weight
   private final Map<String, Integer> neighbors = new ConcurrentHashMap<>();
+  // Maps neighbor IP to last update timestamp
+  private final Map<String, Long> lastUpdated = new ConcurrentHashMap<>();
+
+  private final int updatePeriod;
+
+  /**
+   * Creates a new TopologyManager with the specified update period.
+   *
+   * @param updatePeriod The update period in seconds
+   */
+  public TopologyManager(int updatePeriod) {
+    this.updatePeriod = updatePeriod;
+  }
 
   /**
    * Add a neighbor with the specified link weight.
@@ -22,11 +37,29 @@ public class TopologyManager {
    */
   public boolean addNeighbor(String neighborIp, int weight) {
     Integer oldWeight = neighbors.put(neighborIp, weight);
+    // Set the initial timestamp
+    lastUpdated.put(neighborIp, System.currentTimeMillis());
+
     if (oldWeight == null) {
       logger.info("Added neighbor {} with weight {}", neighborIp, weight);
       return true;
     } else if (oldWeight != weight) {
       logger.info("Updated neighbor {} weight from {} to {}", neighborIp, oldWeight, weight);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Records that an update was received from a neighbor. This updates the timestamp for that
+   * neighbor.
+   *
+   * @param neighborIp The neighbor's IP address
+   * @return true if the neighbor exists and was updated, false otherwise
+   */
+  public boolean recordNeighborUpdate(String neighborIp) {
+    if (neighbors.containsKey(neighborIp)) {
+      lastUpdated.put(neighborIp, System.currentTimeMillis());
       return true;
     }
     return false;
@@ -41,6 +74,7 @@ public class TopologyManager {
   public boolean removeNeighbor(String neighborIp) {
     Integer weight = neighbors.remove(neighborIp);
     if (weight != null) {
+      lastUpdated.remove(neighborIp); // Also remove the timestamp entry
       logger.info("Removed neighbor {}", neighborIp);
       return true;
     }
@@ -74,5 +108,28 @@ public class TopologyManager {
    */
   public Set<String> getAllNeighbors() {
     return neighbors.keySet();
+  }
+
+  /**
+   * Finds neighbors that haven't been updated within the timeout period.
+   *
+   * @return A list of IPs of neighbors considered stale
+   */
+  public List<String> findStaleNeighbors() {
+    long timeout = updatePeriod * 4 * 1000L; // Convert to milliseconds (4 * update period)
+    long now = System.currentTimeMillis();
+    List<String> staleNeighbors = new ArrayList<>();
+
+    for (Map.Entry<String, Long> entry : lastUpdated.entrySet()) {
+      String neighborIp = entry.getKey();
+      long lastUpdate = entry.getValue();
+
+      if (now - lastUpdate > timeout) {
+        staleNeighbors.add(neighborIp);
+        logger.info("Detected stale neighbor: {}", neighborIp);
+      }
+    }
+
+    return staleNeighbors;
   }
 }
