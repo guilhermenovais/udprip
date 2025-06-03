@@ -18,14 +18,12 @@ public class Router {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private final String localAddress;
-  private final int updatePeriod;
   private final DistanceVector distanceVector;
   private final TopologyManager topologyManager;
   private final UdpClient udpClient;
 
   public Router(String localAddress, int updatePeriod, UdpClient udpClient) {
     this.localAddress = localAddress;
-    this.updatePeriod = updatePeriod;
     this.udpClient = udpClient;
 
     // Create internal components
