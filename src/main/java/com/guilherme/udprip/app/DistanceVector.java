@@ -158,7 +158,10 @@ public class DistanceVector {
    * @param weight The link weight
    */
   public synchronized void addDirectRoute(String neighborIp, int weight) {
-    routingTable.put(neighborIp, new RoutingEntry(neighborIp, weight, neighborIp, neighborIp));
+    RoutingEntry neighborEntry = routingTable.get(neighborIp);
+    if (weight <= neighborEntry.getDistance()) {
+      routingTable.put(neighborIp, new RoutingEntry(neighborIp, weight, neighborIp, neighborIp));
+    }
   }
 
   /**
@@ -180,7 +183,6 @@ public class DistanceVector {
   public synchronized boolean hasRoute(String destination) {
     return destination.equals(localAddress) || routingTable.containsKey(destination);
   }
-
 
   /**
    * Get the next hop for a destination.
