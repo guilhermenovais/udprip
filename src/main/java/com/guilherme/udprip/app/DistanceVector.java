@@ -154,7 +154,7 @@ public class DistanceVector {
    */
   public synchronized void addDirectRoute(String neighborIp, int weight) {
     RoutingEntry neighborEntry = routingTable.get(neighborIp);
-    if (weight <= neighborEntry.getDistance()) {
+    if (neighborEntry == null || weight <= neighborEntry.getDistance()) {
       routingTable.put(neighborIp, new RoutingEntry(neighborIp, weight, neighborIp, neighborIp));
     }
   }
