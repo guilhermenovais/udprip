@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Router 2" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.guilherme.udprip.Main" />
+    <module name="udprip" />
+    <option name="PROGRAM_PARAMETERS" value="127.0.1.2 10 router_2_startup.sh" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.guilherme.udprip.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
