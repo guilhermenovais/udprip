@@ -203,7 +203,6 @@ public class Router {
    */
   public void addNeighbor(String neighborIp, int weight) {
     if (topologyManager.addNeighbor(neighborIp, weight)) {
-      distanceVector.addDirectRoute(neighborIp, weight);
       // Send an immediate update to the new neighbor
       sendUpdateToNeighbor(neighborIp);
     }

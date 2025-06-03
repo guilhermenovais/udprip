@@ -132,19 +132,6 @@ public class DistanceVector {
   }
 
   /**
-   * Adds a direct route to a neighbor.
-   *
-   * @param neighborIp The neighbor IP address
-   * @param weight The link weight
-   */
-  public synchronized void addDirectRoute(String neighborIp, int weight) {
-    RoutingEntry neighborEntry = routingTable.get(neighborIp);
-    if (neighborEntry == null || weight <= neighborEntry.getDistance()) {
-      routingTable.put(neighborIp, new RoutingEntry(neighborIp, weight, neighborIp, neighborIp));
-    }
-  }
-
-  /**
    * Checks if a route exists to a destination.
    *
    * @param destination The destination IP address
