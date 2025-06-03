@@ -213,7 +213,7 @@ public class Router {
    */
   public void removeNeighbor(String neighborIp) {
     if (topologyManager.removeNeighbor(neighborIp)) {
-      distanceVector.removeDirectRoute(neighborIp);
+      distanceVector.removeRoutesVia(neighborIp);
     }
   }
 

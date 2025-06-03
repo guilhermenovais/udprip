@@ -121,12 +121,7 @@ public class DistanceVector {
    * @param neighborIp The neighbor IP address
    */
   public synchronized void removeRoutesVia(String neighborIp) {
-    routingTable
-        .entrySet()
-        .removeIf(
-            entry ->
-                entry.getValue().getLearnedFrom().equals(neighborIp)
-                    && !entry.getKey().equals(neighborIp));
+    routingTable.entrySet().removeIf(entry -> entry.getValue().getNextHop().equals(neighborIp));
   }
 
   /** Invalidates routes that haven't been updated within the timeout period. */
@@ -162,16 +157,6 @@ public class DistanceVector {
     if (weight <= neighborEntry.getDistance()) {
       routingTable.put(neighborIp, new RoutingEntry(neighborIp, weight, neighborIp, neighborIp));
     }
-  }
-
-  /**
-   * Removes a direct route to a neighbor and all routes learned through it.
-   *
-   * @param neighborIp The neighbor IP address
-   */
-  public synchronized void removeDirectRoute(String neighborIp) {
-    routingTable.remove(neighborIp);
-    removeRoutesVia(neighborIp);
   }
 
   /**
