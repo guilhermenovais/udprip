@@ -92,17 +92,12 @@ public class DistanceVector {
 
     // Add all other destinations, applying split horizon
     for (RoutingEntry entry : routingTable.values()) {
-      String destination = entry.getDestination();
-
       // Skip routes learned from this neighbor (split horizon)
       if (entry.getLearnedFrom().equals(neighborIp)) {
         continue;
       }
 
-      // Skip the neighbor itself
-      if (destination.equals(neighborIp)) {
-        continue;
-      }
+      String destination = entry.getDestination();
 
       distances.put(destination, entry.getDistance());
     }
