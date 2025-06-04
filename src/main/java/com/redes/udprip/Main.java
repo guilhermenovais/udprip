@@ -24,42 +24,31 @@ public class Main {
         System.exit(1);
       }
 
-      // Parse command line arguments
       String address = args[0];
       int period = Integer.parseInt(args[1]);
       String startupFile = args.length == 3 ? args[2] : null;
 
-      // Create instances
       InetAddress localAddress = InetAddress.getByName(address);
       UdpClient udpClient = new UdpClient(UDP_PORT);
       Router router = new Router(localAddress.getHostAddress(), period, udpClient);
       UdpServer udpServer = new UdpServer(localAddress, UDP_PORT, router);
       CliHandler cliHandler = new CliHandler(router);
 
-      // Start UDP server thread
       Thread serverThread = new Thread(udpServer);
       serverThread.setDaemon(true);
       serverThread.start();
       logger.info("UDP server started on {}:{}", address, UDP_PORT);
 
-      // Setup periodic update task
       ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-      scheduler.scheduleAtFixedRate(
-          router::sendPeriodicUpdates,
-          period, // initial delay
-          period, // period
-          TimeUnit.SECONDS);
+      scheduler.scheduleAtFixedRate(router::sendPeriodicUpdates, period, period, TimeUnit.SECONDS);
       logger.info("Periodic updates scheduled every {} seconds", period);
 
-      // Process startup file if provided
       if (startupFile != null) {
         processStartupFile(startupFile, router);
       }
 
-      // Start CLI handler (on main thread)
       cliHandler.start();
 
-      // Cleanup
       scheduler.shutdown();
       serverThread.interrupt();
       udpServer.stop();
@@ -75,7 +64,7 @@ public class Main {
       while ((line = reader.readLine()) != null) {
         line = line.trim();
         if (line.isEmpty() || line.startsWith("#")) {
-          continue; // Skip empty lines and comments
+          continue;
         }
 
         String[] parts = line.split("\\s+");

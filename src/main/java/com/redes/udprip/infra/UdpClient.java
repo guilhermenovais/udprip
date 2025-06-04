@@ -26,14 +26,11 @@ public class UdpClient {
    */
   public void sendMessage(String destinationIp, String message) {
     try (DatagramSocket socket = new DatagramSocket()) {
-      // Convert message to bytes
       byte[] data = message.getBytes(StandardCharsets.UTF_8);
 
-      // Create packet
       InetAddress address = InetAddress.getByName(destinationIp);
       DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
 
-      // Send packet
       socket.send(packet);
       logger.debug("Sent {} bytes to {}: {}", data.length, destinationIp, message);
     } catch (IOException e) {

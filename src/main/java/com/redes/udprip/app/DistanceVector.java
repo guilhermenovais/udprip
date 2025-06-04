@@ -29,24 +29,18 @@ public class DistanceVector {
    */
   public synchronized void applyUpdate(
       String neighborIp, Map<String, Integer> neighborDistances, int linkWeight) {
-    // Make sure we have a routing entry for this neighbor
     RoutingEntry neighborEntry = routingTable.get(neighborIp);
     if (neighborEntry == null) {
-      // Add the neighbor to the routing table if not already present
       routingTable.put(
           neighborIp, new RoutingEntry(neighborIp, linkWeight, neighborIp, neighborIp));
     }
 
-    // Process each destination in the neighbor's distance vector
     for (Map.Entry<String, Integer> entry : neighborDistances.entrySet()) {
       String destination = entry.getKey();
       int distanceThroughNeighbor = linkWeight + entry.getValue();
 
-      // Bellman-Ford: Update if we found a better route or this is from the same neighbor we
-      // learned from
       RoutingEntry currentEntry = routingTable.get(destination);
       if (currentEntry == null) {
-        // New destination
         routingTable.put(
             destination,
             new RoutingEntry(destination, distanceThroughNeighbor, neighborIp, neighborIp));
@@ -57,7 +51,6 @@ public class DistanceVector {
             distanceThroughNeighbor);
       } else if (currentEntry.getLearnedFrom().equals(neighborIp)
           && distanceThroughNeighbor != currentEntry.getDistance()) {
-        // Update from the same neighbor we learned this route from
         currentEntry.setDistance(distanceThroughNeighbor);
         currentEntry.updateTimestamp();
         logger.debug(
@@ -66,7 +59,6 @@ public class DistanceVector {
             neighborIp,
             distanceThroughNeighbor);
       } else if (distanceThroughNeighbor < currentEntry.getDistance()) {
-        // Better route found
         currentEntry.setDistance(distanceThroughNeighbor);
         currentEntry.setNextHop(neighborIp);
         currentEntry.setLearnedFrom(neighborIp);
@@ -90,9 +82,7 @@ public class DistanceVector {
   public synchronized Map<String, Integer> getDistancesForNeighbor(String neighborIp) {
     Map<String, Integer> distances = new HashMap<>();
 
-    // Add all other destinations, applying split horizon
     for (RoutingEntry entry : routingTable.values()) {
-      // Skip routes learned from this neighbor (split horizon)
       if (entry.getLearnedFrom().equals(neighborIp)) {
         continue;
       }
@@ -121,7 +111,6 @@ public class DistanceVector {
    */
   public synchronized void removeRoutesForStaleNeighbors(List<String> staleNeighbors) {
     for (String neighborIp : staleNeighbors) {
-      // Remove all routes that use this neighbor as next hop
       removeRoutesVia(neighborIp);
     }
   }
@@ -143,7 +132,6 @@ public class DistanceVector {
    * @return The next hop IP address or null if no route exists
    */
   public synchronized String getNextHop(String destination) {
-    // If destination is self, return self
     if (destination.equals(localAddress)) {
       return localAddress;
     }

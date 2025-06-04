@@ -12,9 +12,7 @@ import org.slf4j.LoggerFactory;
 public class TopologyManager {
   private static final Logger logger = LoggerFactory.getLogger(TopologyManager.class);
 
-  // Maps neighbor IP to link weight
   private final Map<String, Integer> neighbors = new ConcurrentHashMap<>();
-  // Maps neighbor IP to last update timestamp
   private final Map<String, Long> lastUpdated = new ConcurrentHashMap<>();
 
   private final int updatePeriod;
@@ -37,7 +35,6 @@ public class TopologyManager {
    */
   public boolean addNeighbor(String neighborIp, int weight) {
     Integer oldWeight = neighbors.put(neighborIp, weight);
-    // Set the initial timestamp
     lastUpdated.put(neighborIp, System.currentTimeMillis());
 
     if (oldWeight == null) {
@@ -74,7 +71,7 @@ public class TopologyManager {
   public boolean removeNeighbor(String neighborIp) {
     Integer weight = neighbors.remove(neighborIp);
     if (weight != null) {
-      lastUpdated.remove(neighborIp); // Also remove the timestamp entry
+      lastUpdated.remove(neighborIp);
       logger.info("Removed neighbor {}", neighborIp);
       return true;
     }
@@ -116,7 +113,7 @@ public class TopologyManager {
    * @return A list of IPs of neighbors considered stale
    */
   public List<String> findStaleNeighbors() {
-    long timeout = updatePeriod * 4 * 1000L; // Convert to milliseconds (4 * update period)
+    long timeout = updatePeriod * 4 * 1000L;
     long now = System.currentTimeMillis();
     List<String> staleNeighbors = new ArrayList<>();
 

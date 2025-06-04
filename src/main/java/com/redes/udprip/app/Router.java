@@ -26,7 +26,6 @@ public class Router {
     this.localAddress = localAddress;
     this.udpClient = udpClient;
 
-    // Create internal components
     this.distanceVector = new DistanceVector(localAddress);
     this.topologyManager = new TopologyManager(updatePeriod);
   }
@@ -38,7 +37,6 @@ public class Router {
    */
   public void handleMessage(String messageJson) {
     try {
-      // First, try to parse as a generic message to determine type
       Map<String, Object> jsonMap = objectMapper.readValue(messageJson, Map.class);
       String type = (String) jsonMap.get("type");
 
@@ -71,13 +69,11 @@ public class Router {
    * @param message The data message
    */
   private void handleDataMessage(DataMessage message) {
-    // If we are the destination, print the payload
     if (message.getDestination().equals(localAddress)) {
       System.out.println(message.getPayload());
       return;
     }
 
-    // Otherwise, forward the message to the next hop
     forwardMessage(message);
   }
 
@@ -87,7 +83,6 @@ public class Router {
    * @param message The update message
    */
   private void handleUpdateMessage(UpdateMessage message) {
-    // Ignore messages not sent to us
     if (!message.getDestination().equals(localAddress)) {
       return;
     }
@@ -95,11 +90,8 @@ public class Router {
     String neighborIp = message.getSource();
     Integer linkWeight = topologyManager.getLinkWeight(neighborIp);
 
-    // Only process updates from known neighbors
     if (linkWeight != null) {
-      // Record that we received an update from this neighbor
       topologyManager.recordNeighborUpdate(neighborIp);
-      // Apply the update to our distance vector
       distanceVector.applyUpdate(neighborIp, message.getDistances(), linkWeight);
     } else {
       logger.debug("Ignoring update from unknown neighbor: {}", neighborIp);
@@ -112,14 +104,11 @@ public class Router {
    * @param message The trace message
    */
   private void handleTraceMessage(TraceMessage message) {
-    // Add our address to the trace
     message.addRouter(localAddress);
 
-    // If we're the destination, send a response
     if (message.getDestination().equals(localAddress)) {
       sendTraceResponse(message);
     } else {
-      // Otherwise, forward the trace
       forwardMessage(message);
     }
   }
@@ -131,11 +120,9 @@ public class Router {
    */
   private void sendTraceResponse(TraceMessage traceMessage) {
     try {
-      // Create a data message with the trace as payload
       String traceJson = objectMapper.writeValueAsString(traceMessage);
       DataMessage response = new DataMessage(localAddress, traceMessage.getSource(), traceJson);
 
-      // Send the response
       forwardMessage(response);
     } catch (JsonProcessingException e) {
       logger.error("Error creating trace response: {}", e.getMessage(), e);
@@ -166,11 +153,9 @@ public class Router {
 
   /** Send periodic updates to all neighbors. */
   public void sendPeriodicUpdates() {
-    // Check for stale routes before sending updates
     List<String> staleNeighbors = topologyManager.findStaleNeighbors();
     distanceVector.removeRoutesForStaleNeighbors(staleNeighbors);
 
-    // Send updates to each neighbor
     for (String neighborIp : topologyManager.getAllNeighbors()) {
       sendUpdateToNeighbor(neighborIp);
     }
@@ -182,10 +167,8 @@ public class Router {
    * @param neighborIp The neighbor's IP address
    */
   private void sendUpdateToNeighbor(String neighborIp) {
-    // Get distances to send (with split horizon applied)
     Map<String, Integer> distances = distanceVector.getDistancesForNeighbor(neighborIp);
 
-    // Create and send the update message
     UpdateMessage updateMessage = new UpdateMessage(localAddress, neighborIp, distances);
     try {
       String updateJson = objectMapper.writeValueAsString(updateMessage);
@@ -203,7 +186,6 @@ public class Router {
    */
   public void addNeighbor(String neighborIp, int weight) {
     if (topologyManager.addNeighbor(neighborIp, weight)) {
-      // Send an immediate update to the new neighbor
       sendUpdateToNeighbor(neighborIp);
     }
   }
