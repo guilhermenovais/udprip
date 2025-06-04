@@ -1,9 +1,9 @@
-package com.guilherme.udprip;
+package com.redes.udprip;
 
-import com.guilherme.udprip.app.Router;
-import com.guilherme.udprip.infra.CliHandler;
-import com.guilherme.udprip.infra.UdpClient;
-import com.guilherme.udprip.infra.UdpServer;
+import com.redes.udprip.app.Router;
+import com.redes.udprip.infra.CliHandler;
+import com.redes.udprip.infra.UdpClient;
+import com.redes.udprip.infra.UdpServer;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.net.InetAddress;

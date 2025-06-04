@@ -1,6 +1,6 @@
-package com.guilherme.udprip.app;
+package com.redes.udprip.app;
 
-import com.guilherme.udprip.model.RoutingEntry;
+import com.redes.udprip.model.RoutingEntry;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

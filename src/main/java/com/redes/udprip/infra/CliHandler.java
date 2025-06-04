@@ -1,6 +1,6 @@
-package com.guilherme.udprip.infra;
+package com.redes.udprip.infra;
 
-import com.guilherme.udprip.app.Router;
+import com.redes.udprip.app.Router;
 import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

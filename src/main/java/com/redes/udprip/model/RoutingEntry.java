@@ -1,4 +1,4 @@
-package com.guilherme.udprip.model;
+package com.redes.udprip.model;
 
 /** Represents an entry in the routing table. */
 public class RoutingEntry {

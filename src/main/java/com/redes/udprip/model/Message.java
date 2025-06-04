@@ -1,4 +1,4 @@
-package com.guilherme.udprip.model;
+package com.redes.udprip.model;
 
 /** Base interface for all message types in the UDPRIP protocol. */
 public interface Message {

@@ -1,4 +1,4 @@
-package com.guilherme.udprip.model;
+package com.redes.udprip.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
