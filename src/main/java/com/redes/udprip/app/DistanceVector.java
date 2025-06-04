@@ -14,6 +14,7 @@ public class DistanceVector {
 
   private final String localAddress;
   private final Map<String, RoutingEntry> routingTable = new ConcurrentHashMap<>();
+  private static final Integer MAX_ROUTE_LENGTH = 255;
 
   public DistanceVector(String localAddress) {
     this.localAddress = localAddress;
@@ -38,6 +39,10 @@ public class DistanceVector {
     for (Map.Entry<String, Integer> entry : neighborDistances.entrySet()) {
       String destination = entry.getKey();
       int distanceThroughNeighbor = linkWeight + entry.getValue();
+
+      if (distanceThroughNeighbor > MAX_ROUTE_LENGTH) {
+        continue;
+      }
 
       RoutingEntry currentEntry = routingTable.get(destination);
       if (currentEntry == null) {
