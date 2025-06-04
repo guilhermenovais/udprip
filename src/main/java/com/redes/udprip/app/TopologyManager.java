@@ -89,16 +89,6 @@ public class TopologyManager {
   }
 
   /**
-   * Check if a router is a neighbor.
-   *
-   * @param ip The IP address to check
-   * @return true if the IP is a neighbor, false otherwise
-   */
-  public boolean isNeighbor(String ip) {
-    return neighbors.containsKey(ip);
-  }
-
-  /**
    * Get all neighbors.
    *
    * @return A set of all neighbor IP addresses
