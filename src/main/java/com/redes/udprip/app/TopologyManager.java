@@ -52,14 +52,11 @@ public class TopologyManager {
    * neighbor.
    *
    * @param neighborIp The neighbor's IP address
-   * @return true if the neighbor exists and was updated, false otherwise
    */
-  public boolean recordNeighborUpdate(String neighborIp) {
+  public void recordNeighborUpdate(String neighborIp) {
     if (neighbors.containsKey(neighborIp)) {
       lastUpdated.put(neighborIp, System.currentTimeMillis());
-      return true;
     }
-    return false;
   }
 
   /**
